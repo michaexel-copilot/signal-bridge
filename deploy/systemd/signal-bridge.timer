@@ -1,10 +1,12 @@
-# Every 30 minutes: picks up new SRC signals soon after each run, and places stock
-# orders deferred overnight once the US market opens (15:30 Europe/Berlin).
+# Once per US trading day, 15 minutes after the open (09:30 New York). New York time keeps
+# that offset across daylight saving: 13:45 UTC in summer, 14:45 UTC in winter. SRC's stock
+# run ends near midnight Europe/Berlin, so its signals are ready by then. Crypto signals are
+# traded at the same time; weekend ones on Monday (within max_signal_age_days).
 [Unit]
 Description=Signal bridge: paper-trade the latest SRC signals (schedule)
 
 [Timer]
-OnCalendar=*:05,35
+OnCalendar=Mon..Fri *-*-* 09:45:00 America/New_York
 Persistent=true
 
 [Install]

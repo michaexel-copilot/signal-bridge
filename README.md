@@ -25,7 +25,7 @@ Some limits apply:
 - Only the latest signal per asset counts, and only if it is at most `max_signal_age_days` old.
 - When BUYs exceed the free slots (`max_positions`), the highest composite score wins. Assets sold in the same run free their slots first.
 - A buy never spends more than the available cash.
-- An order that cannot fill now (market closed, no fresh quote) is **deferred**: the next run tries again. SRC's stock run ends near midnight, so its stock BUYs fill after the next US open.
+- An order that cannot fill now (market closed, no fresh quote) is **deferred**: the next run tries again, which on the server is the next trading day, for example after a US holiday.
 - Each order's client order id comes from its signal (`src-buy-stock:NVDA-20261001`). The platform deduplicates on that id, so a signal is traded at most once however often the bridge runs. A rejected order is retried with `-2`, `-3`, …
 - SRC assets missing from the platform's catalog (e.g. `stock:MU`) are found through the platform's instrument search and added (`auto_add_assets`). `symbol_map` fixes wrong matches. SRC's `BRK.B` becomes Yahoo's `BRK-B` automatically.
 
@@ -61,7 +61,7 @@ Placed orders and errors are appended to `journal.jsonl`. The exit code is 1 if 
 
 ## Run it on the server
 
-Both apps run in Proxmox container 108, and so does the bridge. `signal-bridge.timer` runs it every 30 minutes as the SRC user `srcenter`, so it can read SRC's snapshot. Deploy from Git Bash or any Unix shell; this needs key-based SSH to the Proxmox host `root@192.168.178.10`:
+Both apps run in Proxmox container 108, and so does the bridge. `signal-bridge.timer` runs it once per US trading day at 09:45 New York time, 15 minutes after the open: 13:45 UTC in summer, 14:45 UTC in winter. Weekend crypto signals are traded on Monday. It runs as the SRC user `srcenter`, so it can read SRC's snapshot. Deploy from Git Bash or any Unix shell; this needs key-based SSH to the Proxmox host `root@192.168.178.10`:
 
 ```sh
 scripts/deploy.sh              # deploy the committed code (HEAD)
