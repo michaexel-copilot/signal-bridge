@@ -61,23 +61,19 @@ Placed orders and errors are appended to `journal.jsonl`. The exit code is 1 if 
 
 ## Run it on the server
 
-Both apps run in Proxmox container 108. There the bridge runs every 30 minutes as `signal-bridge.timer`, as the `srcenter` user so it can read SRC's snapshot. Inside the container:
+Both apps run in Proxmox container 108, and so does the bridge. `signal-bridge.timer` runs it every 30 minutes as the SRC user `srcenter`, so it can read SRC's snapshot. Deploy from Git Bash or any Unix shell; this needs key-based SSH to the Proxmox host `root@192.168.178.10`:
 
 ```sh
-install -d /opt/signal-bridge /etc/signal-bridge
-install -d -o srcenter -g srcenter /var/lib/signal-bridge
-# copy this repo to /opt/signal-bridge/src, then:
-uv venv /opt/signal-bridge/venv && uv pip install --python /opt/signal-bridge/venv /opt/signal-bridge/src
-cp /opt/signal-bridge/src/bridge.example.yaml /etc/signal-bridge/bridge.yaml   # then edit, see below
-printf 'PTP_EMAIL=...\nPTP_PASSWORD=...\n' > /etc/signal-bridge/.env
-chown root:srcenter /etc/signal-bridge/.env && chmod 640 /etc/signal-bridge/.env
-cp /opt/signal-bridge/src/deploy/systemd/signal-bridge.* /etc/systemd/system/
-systemctl daemon-reload && systemctl enable --now signal-bridge.timer
+scripts/deploy.sh              # deploy the committed code (HEAD)
+scripts/deploy.sh --sync-env   # also upload the local .env (the platform login) to the container
+scripts/deploy.sh --worktree   # deploy uncommitted changes, for testing
 ```
 
-In `/etc/signal-bridge/bridge.yaml`:
-- `src_db: /var/lib/sentiment-research-center/data/src_dashboard.duckdb`
-- `ptp_url: http://127.0.0.1:8000`
-- `journal: /var/lib/signal-bridge/journal.jsonl`
+The script uploads the code to the container and runs [`deploy/install.sh`](deploy/install.sh) there. The installer is idempotent:
+- It builds the environment in `/opt/signal-bridge/venv` and puts the code in `/opt/signal-bridge/repo`, with a `REVISION` file.
+- It creates `/etc/signal-bridge/bridge.yaml` from [`deploy/bridge.server.yaml`](deploy/bridge.server.yaml) on the first install only, so edits made there survive later deploys.
+- It keeps the login in `/etc/signal-bridge/.env`, readable by root and `srcenter`. The first deploy uploads your local `.env`.
+- It checks the config, the login and the SRC snapshot with a dry run, and stops before touching the timer if that fails.
+- It installs and enables the systemd units.
 
-Check it with `systemctl list-timers signal-bridge.timer` and `journalctl -u signal-bridge -n 50`.
+The server's platform has its own database, so the login must be registered there first. The journal is in `/var/lib/signal-bridge/`. To check the bridge inside the container, use `systemctl list-timers signal-bridge.timer`, `journalctl -u signal-bridge -n 50`, or `runuser -u srcenter -- /opt/signal-bridge/venv/bin/bridge -c /etc/signal-bridge/bridge.yaml status`.

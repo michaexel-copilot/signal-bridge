@@ -1,0 +1,21 @@
+# Signal bridge on the container. deploy/install.sh copies this to /etc/signal-bridge/bridge.yaml
+# once and never overwrites it; edit the copy there. Options: bridge.example.yaml.
+src_db: /var/lib/sentiment-research-center/data/src_dashboard.duckdb
+ptp_url: http://127.0.0.1:8000
+
+portfolio:
+  name: SRC signals
+  base_currency: USD
+  starting_cash: 100000
+
+strategy:
+  position_size_pct: 5
+  max_positions: 20
+  min_confidence: 0.0
+  max_signal_age_days: 3
+  asset_classes: [crypto, stock]
+
+auto_add_assets: true
+symbol_map: {}
+
+journal: /var/lib/signal-bridge/journal.jsonl
