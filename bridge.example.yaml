@@ -1,0 +1,30 @@
+# Copy to bridge.yaml and adjust. Credentials come from PTP_EMAIL / PTP_PASSWORD (environment or .env).
+
+# Read-only snapshot the SRC pipeline publishes after each run. The live src.duckdb is
+# locked while the pipeline writes, so the bridge never opens it.
+src_db: ../sentiment-research-center/data/src_dashboard.duckdb
+
+ptp_url: http://127.0.0.1:8000
+
+# The portfolio the bridge owns. It is created on the first run if the account has none
+# by this name. Keep manual trades out of it: the bridge treats every position as its own.
+portfolio:
+  name: SRC signals
+  base_currency: USD        # EUR or USD
+  starting_cash: 100000
+
+strategy:
+  position_size_pct: 5      # each BUY opens a position worth this share of the portfolio value
+  max_positions: 20
+  min_confidence: 0.0       # ignore BUYs whose SRC confidence is below this (0-1)
+  max_signal_age_days: 3    # ignore signals older than this (SRC stocks run Mon-Fri, crypto daily)
+  asset_classes: [crypto, stock]
+
+# Add SRC assets that are missing from the platform's catalog through its instrument search.
+auto_add_assets: true
+
+# SRC asset key -> platform symbol, for names the automatic match gets wrong.
+symbol_map: {}
+#  "stock:BRK.B": BRK-B
+
+journal: journal.jsonl

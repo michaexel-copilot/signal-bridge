@@ -1,0 +1,19 @@
+# One bridge run. Started by signal-bridge.timer. See README.md, "Run it on the server".
+[Unit]
+Description=Signal bridge: paper-trade the latest SRC signals
+After=network-online.target paper-trading.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# The SRC user, so the snapshot in its data directory is readable.
+User=srcenter
+Group=srcenter
+WorkingDirectory=/var/lib/signal-bridge
+Environment=PYTHONUNBUFFERED=1
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/signal-bridge
+PrivateTmp=true
+ExecStart=/opt/signal-bridge/venv/bin/bridge --config /etc/signal-bridge/bridge.yaml run
+TimeoutStartSec=15min

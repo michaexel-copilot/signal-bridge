@@ -1,0 +1,11 @@
+# Every 30 minutes: picks up new SRC signals soon after each run, and places stock
+# orders deferred overnight once the US market opens (15:30 Europe/Berlin).
+[Unit]
+Description=Signal bridge: paper-trade the latest SRC signals (schedule)
+
+[Timer]
+OnCalendar=*:05,35
+Persistent=true
+
+[Install]
+WantedBy=timers.target
